@@ -27,6 +27,194 @@ const normalizeLocation = (value = '') => String(value).replace(/\s+/g, ' ').tri
 
 const normalizeName = (value = '') => String(value).replace(/\s+/g, ' ').trim();
 
+const extractNamedValue = (item = null) => {
+    if (typeof item === 'string') return normalizeName(item);
+    if (!item || typeof item !== 'object') return '';
+
+    const candidates = [
+        item.name,
+        item.technology,
+        item.technologyName,
+        item.tool,
+        item.stack,
+        item.skill,
+        item.capability,
+        item.label,
+        item.title
+    ];
+
+    for (const candidate of candidates) {
+        const clean = normalizeName(candidate || '');
+        if (clean) return clean;
+    }
+
+    return '';
+};
+
+const normalizeMarketDemand = (value = '') => {
+    const raw = String(value || '').trim().toLowerCase();
+    if (raw === 'high' || raw === 'medium' || raw === 'low') return raw;
+    if (/high|strong|rising|growing/.test(raw)) return 'high';
+    if (/low|weak|limited/.test(raw)) return 'low';
+    return 'medium';
+};
+
+const boundedInt = (value, fallback, min = 1, max = 10) => {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+};
+
+const TECH_STACK_PATTERN_HINTS = [
+    { pattern: /\breact\b/i, label: 'React' },
+    { pattern: /\bnext\.?js\b/i, label: 'Next.js' },
+    { pattern: /\bnode\.?js\b/i, label: 'Node.js' },
+    { pattern: /\btypescript\b/i, label: 'TypeScript' },
+    { pattern: /\bjavascript\b/i, label: 'JavaScript' },
+    { pattern: /\bjava\b/i, label: 'Java' },
+    { pattern: /\bkotlin\b/i, label: 'Kotlin' },
+    { pattern: /\bswift\b/i, label: 'Swift' },
+    { pattern: /\bpython\b/i, label: 'Python' },
+    { pattern: /\baws\b|\bamazon web services\b/i, label: 'AWS' },
+    { pattern: /\bazure\b/i, label: 'Microsoft Azure' },
+    { pattern: /\bgcp\b|\bgoogle cloud\b/i, label: 'Google Cloud Platform' },
+    { pattern: /\bkubernetes\b|\bk8s\b/i, label: 'Kubernetes' },
+    { pattern: /\bdocker\b/i, label: 'Docker' },
+    { pattern: /\bgraphql\b/i, label: 'GraphQL' },
+    { pattern: /\brest\b|\bapi\b|\bapis\b|\bsdk\b/i, label: 'API Platform' },
+    { pattern: /\bios\b|\bandroid\b|\bmobile app\b/i, label: 'Mobile Applications' },
+    { pattern: /\bdata platform\b|\banalytics\b|\bbi\b/i, label: 'Data Analytics' },
+    { pattern: /\bmachine learning\b|\bml\b|\bai\b/i, label: 'AI/ML' },
+    { pattern: /\bsecurity\b|\bsso\b|\boauth\b|\bidentity\b/i, label: 'Identity & Security' },
+    { pattern: /\bcicd\b|\bci\/cd\b|\bdevops\b/i, label: 'CI/CD Automation' },
+    { pattern: /\bmicroservices?\b/i, label: 'Microservices Architecture' },
+    { pattern: /\bcloud\b|\bplatform\b|\binfrastructure\b/i, label: 'Cloud Infrastructure' }
+];
+
+const DEFAULT_TECH_STACK_FALLBACK = [
+    { name: 'API Platform', proficiency: 6, importance: 8, marketDemand: 'high' },
+    { name: 'Cloud Infrastructure', proficiency: 6, importance: 8, marketDemand: 'high' },
+    { name: 'Mobile Applications', proficiency: 6, importance: 7, marketDemand: 'high' },
+    { name: 'Data Analytics', proficiency: 6, importance: 7, marketDemand: 'medium' },
+    { name: 'Identity & Security', proficiency: 6, importance: 8, marketDemand: 'high' }
+];
+
+const toTechStackItem = (item = {}) => {
+    const name = extractNamedValue(item);
+    if (!name) return null;
+
+    const source = typeof item === 'object' && item ? item : {};
+
+    return {
+        ...(source || {}),
+        name,
+        proficiency: boundedInt(source?.proficiency ?? source?.experience ?? source?.maturity, 6, 1, 10),
+        importance: boundedInt(source?.importance ?? source?.priority ?? source?.impact, 7, 1, 10),
+        marketDemand: normalizeMarketDemand(source?.marketDemand ?? source?.demand)
+    };
+};
+
+const normalizeTechStackItems = (items = [], limit = TECH_STACK_LIMIT) => {
+    if (!Array.isArray(items) || items.length === 0) return [];
+
+    const normalized = [];
+    const seen = new Set();
+
+    for (const item of items) {
+        const normalizedItem = toTechStackItem(item);
+        if (!normalizedItem) continue;
+        const key = normalizedItem.name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        normalized.push(normalizedItem);
+    }
+
+    return normalized.slice(0, limit);
+};
+
+const deriveTechStackFromNarrative = (parsedData = {}, limit = TECH_STACK_LIMIT) => {
+    const tokens = [];
+
+    (parsedData.keyProducts || []).forEach((item) => {
+        const value = extractNamedValue(item);
+        if (value) tokens.push(value);
+    });
+
+    (parsedData.coreCapabilities || []).forEach((item) => {
+        const value = extractNamedValue(item);
+        if (value) tokens.push(value);
+    });
+
+    (parsedData.projectIntelligence || []).forEach((project) => {
+        if (!project || typeof project !== 'object') return;
+        ['category', 'title', 'description', 'technicalDetails', 'businessImpact'].forEach((field) => {
+            const value = normalizeName(project[field] || '');
+            if (value) tokens.push(value);
+        });
+    });
+
+    const corpus = tokens.join(' ');
+    if (!corpus) return [];
+
+    const inferred = [];
+    const seen = new Set();
+    for (const rule of TECH_STACK_PATTERN_HINTS) {
+        if (rule.pattern.test(corpus) && !seen.has(rule.label.toLowerCase())) {
+            seen.add(rule.label.toLowerCase());
+            inferred.push({
+                name: rule.label,
+                proficiency: 6,
+                importance: 7,
+                marketDemand: 'high'
+            });
+        }
+    }
+
+    return inferred.slice(0, limit);
+};
+
+const hydrateTechStackFromFollowUpPrompt = async (model, companyName, parsedData) => {
+    if (!model) return [];
+
+    const projectSignals = Array.isArray(parsedData?.projectIntelligence)
+        ? parsedData.projectIntelligence
+            .slice(0, 4)
+            .map((project) => normalizeName(project?.technicalDetails || project?.description || project?.title || ''))
+            .filter(Boolean)
+            .join(' | ')
+        : '';
+
+    const productSignals = Array.isArray(parsedData?.keyProducts)
+        ? parsedData.keyProducts.slice(0, 6).map((item) => extractNamedValue(item)).filter(Boolean).join(', ')
+        : '';
+
+    const followUpPrompt = `Return ONLY valid JSON with this schema:
+{
+  "techStack": [
+    { "name": "string", "proficiency": number, "importance": number, "marketDemand": "high|medium|low" }
+  ]
+}
+
+Company: "${companyName}"
+Known product signals: ${productSignals || 'none'}
+Known project technical signals: ${projectSignals || 'none'}
+
+Rules:
+- Provide 6-9 product-engineering technologies only (frameworks, languages, cloud, architecture, API, security, data).
+- Use concrete and externally plausible technologies for this company.
+- Do not include HR/internal tooling (e.g. Workday, LMS).`;
+
+    try {
+        const result = await model.generateContent(followUpPrompt);
+        const text = result?.response?.text?.() || '';
+        const parsed = parseAIResponse(text);
+        return normalizeTechStackItems(parsed?.techStack, TECH_STACK_LIMIT);
+    } catch (error) {
+        console.warn('[Deep Dive] Tech stack follow-up prompt failed:', error?.message || error);
+        return [];
+    }
+};
+
 const trimNamedItems = (items = [], limit = 10) => {
     if (!Array.isArray(items) || items.length === 0) return [];
 
@@ -34,9 +222,7 @@ const trimNamedItems = (items = [], limit = 10) => {
     const seen = new Set();
 
     for (const item of items) {
-        const name = typeof item === 'string'
-            ? normalizeName(item)
-            : normalizeName(item?.name || '');
+        const name = extractNamedValue(item);
 
         if (!name) continue;
         const key = name.toLowerCase();
@@ -435,8 +621,24 @@ ${userPrompt}
         // Parse the JSON response
         let parsedData = parseAIResponse(aiResponse);
 
-        parsedData.techStack = trimNamedItems(parsedData.techStack, TECH_STACK_LIMIT);
+        parsedData.techStack = normalizeTechStackItems(trimNamedItems(parsedData.techStack, TECH_STACK_LIMIT), TECH_STACK_LIMIT);
         parsedData.coreCapabilities = trimNamedItems(parsedData.coreCapabilities, CORE_CAPABILITIES_LIMIT);
+
+        if (!parsedData.techStack.length) {
+            parsedData.techStack = await hydrateTechStackFromFollowUpPrompt(
+                deepDiveModel,
+                parsedData.companyName || effectiveCompanyName,
+                parsedData
+            );
+        }
+
+        if (!parsedData.techStack.length) {
+            parsedData.techStack = deriveTechStackFromNarrative(parsedData, TECH_STACK_LIMIT);
+        }
+
+        if (!parsedData.techStack.length) {
+            parsedData.techStack = DEFAULT_TECH_STACK_FALLBACK.slice(0, TECH_STACK_LIMIT);
+        }
 
         // Safety: ensure talent movement is empty per rules
         if (parsedData.talentMovement) {

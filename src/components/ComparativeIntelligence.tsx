@@ -12,13 +12,11 @@ import {
     ChevronUp,
     CheckCircle2,
     DollarSign,
-    Trophy,
     Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 import { CompanyInsights } from './CompanyInsightsDisplay';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { BenchmarkScoreCard } from './BenchmarkScoreCard';
 import { Progress as UIProgress } from '@/components/ui/progress';
 
 interface ComparativeIntelligenceProps {
@@ -142,7 +140,9 @@ const dedupeNames = (items: any[] = [], limit = 10): string[] => {
     const results: string[] = [];
 
     for (const item of items) {
-        const raw = typeof item === 'string' ? item : item?.name;
+        const raw = typeof item === 'string'
+            ? item
+            : (item?.name || item?.technology || item?.technologyName || item?.tool || item?.stack || item?.skill || item?.label || item?.title);
         const clean = String(raw || '').replace(/\s+/g, ' ').trim();
         if (!clean) continue;
 
@@ -169,7 +169,6 @@ export const ComparativeIntelligence = ({ companies, insights, companyColors }: 
     };
 
     const categories = [
-        { id: 'benchmark', name: 'AI Benchmark Score', icon: Trophy },
         { id: 'sentiment', name: 'Talent Sentiment', icon: Star },
         { id: 'metrics', name: 'Key Metrics', icon: Users },
         { id: 'locations', name: 'Core Operational Hubs', icon: MapPin },
@@ -208,14 +207,6 @@ export const ComparativeIntelligence = ({ companies, insights, companyColors }: 
                                     </div>
                                     <Card className="border-slate-300 shadow-sm overflow-hidden bg-white">
                                         <CardContent className="p-5">
-                                            {cat.id === 'benchmark' && data.benchmarkScore && data.talentSentiment && (
-                                                <BenchmarkScoreCard
-                                                    benchmarkScore={data.benchmarkScore}
-                                                    talentSentiment={data.talentSentiment}
-                                                    companyName={companyName}
-                                                />
-                                            )}
-
                                             {cat.id === 'sentiment' && data.talentSentiment && (
                                                 <div className="space-y-4">
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -301,14 +292,26 @@ export const ComparativeIntelligence = ({ companies, insights, companyColors }: 
                                             )}
 
                                             {cat.id === 'tech' && (
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                                    {dedupeNames(data.techStack as any[], TECH_STACK_LIMIT).map((t, i) => (
-                                                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
-                                                            <CheckCircle2 className="w-3 h-3 text-primary animate-in zoom-in duration-300" />
-                                                            <span className="text-xs font-semibold text-slate-700 truncate">{t}</span>
+                                                (() => {
+                                                    const techItems = dedupeNames(data.techStack as any[], TECH_STACK_LIMIT);
+                                                    if (!techItems.length) {
+                                                        return (
+                                                            <p className="text-xs text-slate-500">
+                                                                Technology stack enrichment is still running for this company.
+                                                            </p>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                                            {techItems.map((t, i) => (
+                                                                <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
+                                                                    <CheckCircle2 className="w-3 h-3 text-primary animate-in zoom-in duration-300" />
+                                                                    <span className="text-xs font-semibold text-slate-700 truncate">{t}</span>
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                    );
+                                                })()
                                             )}
 
                                             {cat.id === 'salary' && (

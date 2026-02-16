@@ -20,7 +20,7 @@ export const exportReportToPDF = async (
     }
 
     try {
-        const scale = Math.min(1.25, Math.max(1, window.devicePixelRatio || 1));
+        const scale = Math.min(1.5, Math.max(1.25, window.devicePixelRatio || 1));
         const canvas = await html2canvas(target, {
             scale,
             backgroundColor: '#ffffff',
@@ -57,6 +57,11 @@ export const exportReportToPDF = async (
                 throw new Error('Failed to create export canvas context.');
             }
 
+            pageContext.fillStyle = '#ffffff';
+            pageContext.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+            pageContext.imageSmoothingEnabled = true;
+            pageContext.imageSmoothingQuality = 'high';
+
             pageContext.drawImage(
                 canvas,
                 0,
@@ -74,8 +79,8 @@ export const exportReportToPDF = async (
             }
 
             const renderHeightMm = sliceHeightPx / pixelsPerMm;
-            const imageData = pageCanvas.toDataURL('image/jpeg', 0.82);
-            pdf.addImage(imageData, 'JPEG', margin, margin, contentWidth, renderHeightMm, undefined, 'FAST');
+            const imageData = pageCanvas.toDataURL('image/png');
+            pdf.addImage(imageData, 'PNG', margin, margin, contentWidth, renderHeightMm, undefined, 'FAST');
 
             offsetPx += sliceHeightPx;
             pageIndex += 1;

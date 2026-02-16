@@ -29,7 +29,6 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { TechStackSection } from '@/components/TechStackSection';
-import { BenchmarkScoreCard } from '@/components/BenchmarkScoreCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import logoImage from '@/assets/c2-logo.png';
@@ -47,6 +46,29 @@ const CORE_HUB_PATTERNS = [
 ];
 
 const normalizeName = (value = '') => String(value).replace(/\s+/g, ' ').trim();
+
+const extractNamedValue = (item: any): string => {
+    if (typeof item === 'string') return normalizeName(item);
+    if (!item || typeof item !== 'object') return '';
+
+    const candidates = [
+        item.name,
+        item.technology,
+        item.technologyName,
+        item.tool,
+        item.stack,
+        item.skill,
+        item.label,
+        item.title
+    ];
+
+    for (const candidate of candidates) {
+        const clean = normalizeName(candidate || '');
+        if (clean) return clean;
+    }
+
+    return '';
+};
 
 const scoreCoreHubPriority = (location: string) => {
     const normalized = normalizeName(location);
@@ -88,8 +110,7 @@ const uniqueNames = (items: any[] = [], limit = 10): string[] => {
     const seen = new Set<string>();
 
     for (const item of items) {
-        const raw = typeof item === 'string' ? item : item?.name;
-        const name = normalizeName(raw || '');
+        const name = extractNamedValue(item);
         if (!name) continue;
         const key = name.toLowerCase();
         if (seen.has(key)) continue;
@@ -576,17 +597,6 @@ export const CompanyInsightsDisplay = ({ insights, onBack, searchParams }: Compa
 
     return (
         <div className="w-full space-y-6 animate-fade-in">
-            {/* Benchmark Score Card */}
-            {insights.benchmarkScore && insights.talentSentiment && (
-                <div className="pdf-section">
-                    <BenchmarkScoreCard
-                        benchmarkScore={insights.benchmarkScore}
-                        talentSentiment={insights.talentSentiment}
-                        companyName={insights.companyName}
-                    />
-                </div>
-            )}
-
             {/* Key Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pdf-section">
                 <Card className="p-6 gradient-card shadow-card border-slate-300 transition-smooth hover:shadow-elevated">
@@ -690,14 +700,12 @@ export const CompanyInsightsDisplay = ({ insights, onBack, searchParams }: Compa
             )}
 
             {/* Technology Stack */}
-            {(insights.techStack && insights.techStack.length > 0) && (
-                <div className="pdf-section">
-                    <TechStackSection
-                        title="Technology Stack"
-                        items={techStackItems}
-                    />
-                </div>
-            )}
+            <div className="pdf-section">
+                <TechStackSection
+                    title="Technology Stack"
+                    items={techStackItems}
+                />
+            </div>
 
             {/* Project Intelligence */}
             <Card className="p-6 gradient-card shadow-card border-slate-300 pdf-section">

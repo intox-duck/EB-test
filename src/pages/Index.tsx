@@ -953,7 +953,7 @@ const Index = () => {
               </div>
 
               <p className="mx-auto max-w-4xl animate-in slide-in-from-top-4 text-center text-base font-bold text-black fade-in duration-1000 sm:text-lg lg:text-xl">
-                Analyse and Compare Employer Brand Performance Across 9 Dimensions.
+                Analyse and Compare Employer Brand Performance Across 9 Dimensions
               </p>
             </div>
 
