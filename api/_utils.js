@@ -496,7 +496,7 @@ export async function getVerifiedCompanySize(companyName, retryCount = 0) {
       totalEmployees: `${chapter2.companySizeApprox}`,
       reach: 'global embedded delivery model',
       formattedString: `Approx. ${chapter2.companySizeApprox} employees across a global embedded talent delivery model`,
-      locations: []
+      locations: Array.isArray(chapter2.coreLocations) ? chapter2.coreLocations : []
     };
   }
 

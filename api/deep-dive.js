@@ -659,6 +659,7 @@ ${userPrompt}
             const chapter2Override = getChapter2DeepDiveOverride();
             parsedData.companyName = chapter2Override.companyName;
             parsedData.companySize = chapter2Override.companySize;
+            parsedData.locations = Array.isArray(chapter2Override.locations) ? chapter2Override.locations : parsedData.locations;
             parsedData.keyProducts = chapter2Override.keyProducts;
             parsedData.coreCapabilities = trimNamedItems(chapter2Override.coreCapabilities, CORE_CAPABILITIES_LIMIT);
 

@@ -689,6 +689,63 @@ export const CompanyInsightsDisplay = ({ insights, onBack, searchParams }: Compa
                 </Card>
             </div>
 
+            {/* Talent Sentiment */}
+            {insights.talentSentiment && (
+                <div className="pdf-section">
+                    <Card className="p-6 gradient-card shadow-card border-slate-300">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Star className="w-5 h-5 text-primary" />
+                            <h3 className="text-lg font-semibold text-foreground">Talent Sentiment</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+                            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Aggregated</p>
+                                <p className="text-xl font-bold text-primary">{insights.talentSentiment.aggregatedScore}/5</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Reviews</p>
+                                <p className="text-xl font-bold text-foreground">{(insights.talentSentiment.totalReviews || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Sentiment</p>
+                                <p className="text-xl font-bold text-emerald-600 capitalize">{insights.talentSentiment.sentiment || 'Neutral'}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Work/Life</p>
+                                <p className="text-xl font-bold text-blue-600">{insights.talentSentiment.workLifeBalance || 0}/5</p>
+                            </div>
+                        </div>
+
+                        {Array.isArray(insights.talentSentiment.keyThemes) && insights.talentSentiment.keyThemes.length > 0 && (
+                            <div className="mb-5">
+                                <p className="text-xs font-medium text-muted-foreground mb-2">Key Themes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {insights.talentSentiment.keyThemes.slice(0, 8).map((theme, index) => (
+                                        <Badge key={`${theme}-${index}`} variant="secondary" className="bg-slate-100 text-slate-700">
+                                            {theme}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {Array.isArray(insights.talentSentiment.sources) && insights.talentSentiment.sources.length > 0 && (
+                            <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-2">Sources</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {insights.talentSentiment.sources.slice(0, 4).map((source, index) => (
+                                        <Badge key={`${source.name}-${index}`} variant="outline" className="border-primary/30 text-foreground">
+                                            {source.name}: {source.score}/5 ({(source.reviewCount || 0).toLocaleString()} reviews)
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            )}
+
             {/* Core Capabilities */}
             {(insights.coreCapabilities && insights.coreCapabilities.length > 0) && (
                 <div className="pdf-section">

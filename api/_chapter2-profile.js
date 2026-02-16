@@ -6,6 +6,14 @@ const CHAPTER2_PROFILE = {
   canonicalUrl: CHAPTER2_CANONICAL_URL,
   industry: 'Talent Acquisition & Recruitment Process Outsourcing (RPO)',
   companySizeApprox: 120,
+  coreLocations: [
+    'London, UK',
+    'Johannesburg, South Africa',
+    'Budapest, Hungary',
+    'New York, USA',
+    'Boston, USA',
+    'India'
+  ],
   overview:
     'Chapter 2 is a technology-enabled global talent acquisition and Recruitment Process Outsourcing (RPO) agency founded in 2020 by Leo Harrison (former Global COO of OLIVER) and backed by investor Steven Bartlett.',
   operatingModel:
@@ -60,6 +68,7 @@ CHAPTER 2 CANONICAL CONTEXT (HIGH PRIORITY FACTS):
 - ${CHAPTER2_PROFILE.overview}
 - ${CHAPTER2_PROFILE.operatingModel}
 - Company size signal: approximately ${CHAPTER2_PROFILE.companySizeApprox} employees.
+- Core operational hubs: ${CHAPTER2_PROFILE.coreLocations.join(', ')}.
 - Service pillars:
 ${pillars}
 INSTRUCTION: Use this context as the baseline identity for Chapter 2. Keep outputs concise and aligned to each component's existing structure.
@@ -164,6 +173,7 @@ export function getChapter2DeepDiveOverride() {
   return {
     companyName: CHAPTER2_PROFILE.canonicalName,
     companySize,
+    locations: CHAPTER2_PROFILE.coreLocations,
     keyProducts: CHAPTER2_PROFILE.servicePillars.map((pillar) => pillar.name),
     coreCapabilities,
     projectIntelligence
