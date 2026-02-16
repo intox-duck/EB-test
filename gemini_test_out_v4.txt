@@ -1,0 +1,21 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+Using hardcoded key for testing
+[Gemini] Grounding Check: Searching for exact Glassdoor score and details for Collinson Group...
+RAW GEMINI RESPONSE: {"aggregatedScore": 3.6, "totalReviews": 591, "workLifeBalance": 3.7, "careerOpportunities": 3.3, "compensation": 3.3, "sentiment": "Balanced", "keyThemes": ["Flexible remote work", "Strong peer relationships", "Compensation competitiveness", "Management structure effectiveness"], "summary": "Glassdoor: 3.6/5. Employees report valuing flexible working conditions and strong peer support. Data suggests mixed views on management effectiveness, career progression (3.3), and compensation (3.3). The organization maintains strong work-life balance scores (3.7)."}
+
+--- FINAL GEMINI PARSED OUTPUT ---
+{
+  "aggregatedScore": 3.6,
+  "totalReviews": 591,
+  "workLifeBalance": 3.7,
+  "careerOpportunities": 3.3,
+  "compensation": 3.3,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Strong peer relationships",
+    "Compensation competitiveness",
+    "Management structure effectiveness"
+  ],
+  "summary": "Glassdoor: 3.6/5. Employees report valuing flexible working conditions and strong peer support. Data suggests mixed views on management effectiveness, career progression (3.3), and compensation (3.3). The organization maintains strong work-life balance scores (3.7)."
+}

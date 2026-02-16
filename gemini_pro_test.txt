@@ -1,0 +1,34 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+Using hardcoded key for testing
+[Gemini] Grounding Check: Searching for exact Glassdoor score and details for Collinson Group...
+RAW GEMINI RESPONSE: Based on current data from Indeed (as Glassdoor specific current data is not explicitly available in search snippets, but Indeed provides a robust and recent breakdown for "Collinson Group" which aligns with the user's interest in the company), the ratings are as follows. Note that the Indeed score is 3.5 with ~90 reviews, while Payscale suggests a 3.7 satisfaction rating.
+
+```json
+{
+  "aggregatedScore": 3.5,
+  "totalReviews": 90,
+  "workLifeBalance": 3.4,
+  "careerOpportunities": 2.8,
+  "compensation": 3.2,
+  "sentiment": "Balanced",
+  "keyThemes": ["Flexible remote work", "Supportive peer environment", "Management effectiveness concerns", "Limited career progression"],
+  "summary": "Indeed: 3.5/5. Employees frequently commend the flexible working options and strong support from colleagues. However, feedback reflects challenges with management effectiveness and nepotism. Career advancement (2.8/5) and compensation (3.2/5) are rated lower than work-life balance."
+}
+```
+
+--- FINAL GEMINI PARSED OUTPUT ---
+{
+  "aggregatedScore": 3.5,
+  "totalReviews": 90,
+  "workLifeBalance": 3.4,
+  "careerOpportunities": 2.8,
+  "compensation": 3.2,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Supportive peer environment",
+    "Management effectiveness concerns",
+    "Limited career progression"
+  ],
+  "summary": "Indeed: 3.5/5. Employees frequently commend the flexible working options and strong support from colleagues. However, feedback reflects challenges with management effectiveness and nepotism. Career advancement (2.8/5) and compensation (3.2/5) are rated lower than work-life balance."
+}

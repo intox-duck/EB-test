@@ -1,0 +1,4 @@
+Response Status: 200
+--- Employee Experience Dimension ---
+Score: 72
+Insight: Glassdoor: 3.7/5; Indeed: 3.5/5. Collinson fosters exceptional peer relationships and flexible remote work. While 94% of staff feel proud to recommend the firm, consistent management and clearer career pathways remain areas for optimisation. The culture is built on mentorship and 'Growth with Heart', ensuring a supportive environment that prioritises individual well-being and professional development.

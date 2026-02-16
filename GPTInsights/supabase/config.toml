@@ -1,0 +1,7 @@
+project_id = "ltoczpuockphngkgbdvw"
+
+[functions.generate-company-insights]
+verify_jwt = false
+
+[functions.insights-chat]
+verify_jwt = false

@@ -1,0 +1,39 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+Using hardcoded key for testing
+[Gemini] Grounding Check: Searching for exact Glassdoor score and details for Collinson Group...
+RAW GEMINI RESPONSE: The current Glassdoor ratings for Collinson Group reflect a generally positive employee sentiment regarding flexibility and culture, tempered by feedback on management and progression.
+
+```json
+{
+  "aggregatedScore": 3.6,
+  "totalReviews": 591,
+  "workLifeBalance": 3.7,
+  "careerOpportunities": 3.3,
+  "compensation": 3.3,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Supportive peer environment",
+    "Inconsistent management",
+    "Limited career progression"
+  ],
+  "summary": "Glassdoor: 3.6/5. Employees value the flexible, hybrid working model and supportive peer relationships. However, feedback highlights concerns over career progression and management consistency. Recent reviews note organizational changes affecting sentiment."
+}
+```
+
+--- FINAL GEMINI PARSED OUTPUT ---
+{
+  "aggregatedScore": 3.6,
+  "totalReviews": 591,
+  "workLifeBalance": 3.7,
+  "careerOpportunities": 3.3,
+  "compensation": 3.3,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Supportive peer environment",
+    "Inconsistent management",
+    "Limited career progression"
+  ],
+  "summary": "Glassdoor: 3.6/5. Employees value the flexible, hybrid working model and supportive peer relationships. However, feedback highlights concerns over career progression and management consistency. Recent reviews note organizational changes affecting sentiment."
+}

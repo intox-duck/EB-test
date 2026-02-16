@@ -1,0 +1,16 @@
+project_id = "jygdlxiodttamrsmtpoz"
+
+[functions.analyze-brand]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.brand-radar-analyzer]
+verify_jwt = false
+
+[functions.competitor-intelligence]
+verify_jwt = false
+
+[functions.dimension-insights-generator]
+verify_jwt = false

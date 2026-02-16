@@ -1,0 +1,16 @@
+[Perplexity] Testing sentiment for: Collinson Group (https://www.collinsongroup.com/)
+
+--- TALENT SENTIMENT REPORT: COLLINSON GROUP ---
+{
+  "companyName": "Collinson Group",
+  "aggregatedScore": 3.9,
+  "totalReviews": 156,
+  "linkedInFollowers": 28500,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Strong career development opportunities",
+    "Supportive team culture and work-life balance",
+    "Compensation below market average"
+  ],
+  "summary": "Collinson Group earns a solid 3.9/5 on Glassdoor from 156 reviews, reflecting balanced sentiment. Employees praise professional growth, collaborative environment, and flexible work options. Key drawbacks include lower pay competitiveness and occasional workload pressures. Overall, positive for career builders despite comp concerns. (248 chars)"
+}

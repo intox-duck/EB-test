@@ -1,0 +1,35 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+Using hardcoded key for testing
+[Gemini] Grounding Check: Searching for exact Glassdoor score and details for Collinson Group...
+RAW GEMINI RESPONSE: {
+  "aggregatedScore": 3.6,
+  "totalReviews": 591,
+  "workLifeBalance": 3.7,
+  "careerOpportunities": 3.3,
+  "compensation": 3.3,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Strong peer relationships",
+    "Legacy management challenges",
+    "Inclusive leadership"
+  ],
+  "summary": "Glassdoor: 3.6/5 (591 reviews); Indeed: 3.5/5 (90 reviews). Employees report flexible remote work and strong peer support. Data suggests challenges regarding management effectiveness and career growth, although themes include inclusive leadership and ongoing cultural development."
+}
+
+--- FINAL GEMINI PARSED OUTPUT ---
+{
+  "aggregatedScore": 3.6,
+  "totalReviews": 591,
+  "workLifeBalance": 3.7,
+  "careerOpportunities": 3.3,
+  "compensation": 3.3,
+  "sentiment": "Balanced",
+  "keyThemes": [
+    "Flexible remote work",
+    "Strong peer relationships",
+    "Legacy management challenges",
+    "Inclusive leadership"
+  ],
+  "summary": "Glassdoor: 3.6/5 (591 reviews); Indeed: 3.5/5 (90 reviews). Employees report flexible remote work and strong peer support. Data suggests challenges regarding management effectiveness and career growth, although themes include inclusive leadership and ongoing cultural development."
+}
