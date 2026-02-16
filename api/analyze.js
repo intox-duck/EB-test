@@ -32,6 +32,64 @@ function toDisplayCompanyName(value = '') {
         .join(' ');
 }
 
+function normalizeCompanyKey(value = '') {
+    return String(value || '').trim().toLowerCase();
+}
+
+function tokenizeCompanyName(value = '') {
+    return normalizeCompanyKey(value)
+        .replace(/[^a-z0-9&]+/g, ' ')
+        .split(' ')
+        .filter(Boolean);
+}
+
+function namesLikelySameCompany(left = '', right = '') {
+    const normalizedLeft = normalizeCompanyKey(left);
+    const normalizedRight = normalizeCompanyKey(right);
+
+    if (!normalizedLeft || !normalizedRight) return false;
+    if (normalizedLeft === normalizedRight) return true;
+
+    if (
+        (normalizedLeft.includes(normalizedRight) || normalizedRight.includes(normalizedLeft)) &&
+        Math.min(normalizedLeft.length, normalizedRight.length) >= 4
+    ) {
+        return true;
+    }
+
+    const leftTokens = tokenizeCompanyName(left);
+    const rightTokens = tokenizeCompanyName(right);
+    if (!leftTokens.length || !rightTokens.length) return false;
+
+    return leftTokens.some((token) => token.length >= 4 && rightTokens.includes(token));
+}
+
+function applyCompetitorPriorityRules(primaryCompanyName = '', aiCompetitors = []) {
+    const displayPrimary = toDisplayCompanyName(primaryCompanyName);
+    const normalizedPrimary = normalizeCompanyKey(displayPrimary);
+
+    const priorityCompetitors = [];
+    if (/collinson/.test(normalizedPrimary) || /priority\s*pass/.test(normalizedPrimary)) {
+        priorityCompetitors.push('DragonPass', 'Plaza Premium Group', 'Lounge Pass');
+    }
+    if (/dragon\s*pass|dragonpass/.test(normalizedPrimary)) {
+        priorityCompetitors.push('Collinson Group', 'Priority Pass', 'LoungeKey');
+    }
+
+    const merged = [...priorityCompetitors, ...aiCompetitors]
+        .map((name) => toDisplayCompanyName(name))
+        .filter(Boolean);
+
+    const deduped = [];
+    for (const candidate of merged) {
+        if (namesLikelySameCompany(candidate, displayPrimary)) continue;
+        if (deduped.some((existing) => namesLikelySameCompany(existing, candidate))) continue;
+        deduped.push(candidate);
+    }
+
+    return deduped.slice(0, 6);
+}
+
 export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -286,7 +344,10 @@ ${chapter2PromptContext}
             industry: isChapter2Company ? chapter2Profile.industry : (parsed.industry || ''),
             overallScore: parsed.overallScore || Math.round(dimensions.reduce((a, d) => a + d.score, 0) / dimensions.length),
             dimensions: dimensions,
-            competitors: (parsed.competitors || []).map((name) => toDisplayCompanyName(name)).filter(Boolean),
+            competitors: applyCompetitorPriorityRules(
+                parsed.companyName || resolvedCompanyName || extractedCompanyName,
+                parsed.competitors || []
+            ),
             summary: isChapter2Company ? getChapter2Summary() : (parsed.summary || ''),
             sources: [],
             talentSentiment: normalizedTalentSentiment,

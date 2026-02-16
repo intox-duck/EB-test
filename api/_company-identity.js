@@ -7,6 +7,10 @@ const CHAPTER2_CANONICAL_NAME = 'Chapter 2';
 const CHAPTER2_CANONICAL_URL = 'https://www.chapter2.group/';
 const CHAPTER2_GLASSDOOR_URL = 'https://www.glassdoor.co.uk/Overview/Working-at-Chapter-2-United-Kingdom-EI_IE6970558.11,35.htm';
 const CHAPTER2_GLASSDOOR_COMPANY_ID = '6970558';
+const KNOWN_COMPANY_URL_HINTS = [
+  { pattern: /\bdragon\s*pass\b/i, url: 'https://www.dragonpass.com/' },
+  { pattern: /\bcollinson(\s*group)?\b/i, url: 'https://www.collinsongroup.com/' }
+];
 
 function normalizeWhitespace(value = '') {
   return String(value).replace(/\s+/g, ' ').trim();
@@ -145,6 +149,44 @@ function extractCompanyFromUrlInput(companyUrl = '') {
   } catch {
     return null;
   }
+}
+
+function extractDomainToken(rawUrl = '') {
+  if (!rawUrl) return '';
+
+  try {
+    const parsed = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+    const parts = host.split('.').filter(Boolean);
+    if (!parts.length) return '';
+
+    let core = parts[0];
+    if (core === 'careers' && parts.length > 1) {
+      core = parts[1];
+    }
+
+    return core.replace(/[^a-z0-9]/g, '');
+  } catch {
+    return '';
+  }
+}
+
+function inferPreferredCompanyUrl(companyName = '') {
+  const cleaned = normalizeWhitespace(companyName);
+  if (!cleaned) return null;
+
+  for (const hint of KNOWN_COMPANY_URL_HINTS) {
+    if (hint.pattern.test(cleaned)) {
+      return hint.url;
+    }
+  }
+
+  const compact = cleaned.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (compact.length >= 4 && compact.length <= 24) {
+    return `https://www.${compact}.com/`;
+  }
+
+  return null;
 }
 
 function canonicalizeUrl(rawUrl = '') {
@@ -481,13 +523,18 @@ async function fetchSearchPage(query, fetchImpl) {
 
 function normalizeCompanyInput(companyName = '', companyUrl = '') {
   const normalizedName = normalizeWhitespace(companyName);
-  const fromUrl = extractCompanyFromUrlInput(companyUrl);
+  const preferredCompanyUrl = canonicalizeUrl(companyUrl) || inferPreferredCompanyUrl(normalizedName);
+  const fromUrl = extractCompanyFromUrlInput(preferredCompanyUrl || companyUrl);
   const displayName = normalizedName || fromUrl || '';
+  const domainToken = extractDomainToken(preferredCompanyUrl || companyUrl);
+  const mergedTokens = tokenizeName([displayName, domainToken].filter(Boolean).join(' '));
 
   return {
     displayName: displayName || '',
     searchName: displayName || '',
-    tokens: tokenizeName(displayName)
+    tokens: mergedTokens,
+    preferredCompanyUrl: preferredCompanyUrl || null,
+    domainToken
   };
 }
 
@@ -535,11 +582,12 @@ export async function resolveCompanyIdentity({ companyName = '', companyUrl = ''
       canonicalCompanyName: '',
       confidence: 'low',
       glassdoor: null,
-      indeed: null
+      indeed: null,
+      preferredCompanyUrl: normalized.preferredCompanyUrl || null
     };
   }
 
-  const queries = [
+  const queryPool = [
     `site:glassdoor.com "${normalized.searchName}" "Reviews"`,
     `site:glassdoor.co.uk "${normalized.searchName}" "Working at"`,
     `site:glassdoor.com "${normalized.searchName}" "Working at"`,
@@ -547,6 +595,19 @@ export async function resolveCompanyIdentity({ companyName = '', companyUrl = ''
     `"${normalized.searchName}" glassdoor reviews`,
     `"${normalized.searchName}" company reviews glassdoor`
   ];
+
+  if (normalized.domainToken) {
+    queryPool.unshift(`site:glassdoor.com "${normalized.domainToken}" "Reviews"`);
+    queryPool.unshift(`site:glassdoor.co.uk "${normalized.domainToken}" "Reviews"`);
+    queryPool.push(`"${normalized.domainToken}.com" glassdoor reviews`);
+  }
+
+  if (normalized.preferredCompanyUrl) {
+    queryPool.push(`"${normalized.preferredCompanyUrl}" glassdoor`);
+    queryPool.push(`"${normalized.preferredCompanyUrl}" indeed reviews`);
+  }
+
+  const queries = [...new Set(queryPool)];
 
   const searchPages = await Promise.all(
     queries.map(async (query) => {
@@ -621,7 +682,8 @@ export async function resolveCompanyIdentity({ companyName = '', companyUrl = ''
           ratingHint: null,
           reviewsHint: null
         }
-      : null
+      : null,
+    preferredCompanyUrl: normalized.preferredCompanyUrl || null
   };
 }
 
@@ -659,18 +721,31 @@ export async function scrapeGlassdoorBaseline(identity, { fetchImpl = fetch } = 
   if (!identity) return null;
 
   const searchName = identity.canonicalCompanyName || identity.normalizedCompanyName;
+  const domainToken = extractDomainToken(identity.preferredCompanyUrl || '');
   if (!searchName) return null;
 
-  const baselineQueries = [
+  const baselineQueryPool = [
     `site:glassdoor.com "${searchName}" "company reviews"`,
     `site:glassdoor.co.uk "${searchName}" "company reviews"`,
     `site:glassdoor.com "${searchName}" "out of 5 stars"`,
     `"${searchName}" glassdoor reviews`
   ];
 
-  if (identity.glassdoor?.url) {
-    baselineQueries.unshift(`"${identity.glassdoor.url}"`);
+  if (domainToken) {
+    baselineQueryPool.unshift(`site:glassdoor.com "${domainToken}" "company reviews"`);
+    baselineQueryPool.unshift(`site:glassdoor.co.uk "${domainToken}" "company reviews"`);
+    baselineQueryPool.push(`"${domainToken}.com" glassdoor reviews`);
   }
+
+  if (identity.glassdoor?.url) {
+    baselineQueryPool.unshift(`"${identity.glassdoor.url}"`);
+  }
+
+  if (identity.preferredCompanyUrl) {
+    baselineQueryPool.push(`"${identity.preferredCompanyUrl}" glassdoor`);
+  }
+
+  const baselineQueries = [...new Set(baselineQueryPool)];
 
   const pages = await Promise.all(
     baselineQueries.map(async (query) => {

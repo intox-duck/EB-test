@@ -327,6 +327,7 @@ const Index = () => {
   const [insightsMap, setInsightsMap] = useState<Record<string, CompanyInsights>>({});
   const [insightsData, setInsightsData] = useState<CompanyInsights | null>(null);
   const [deepDiveLoadingByCompany, setDeepDiveLoadingByCompany] = useState<Record<string, boolean>>({});
+  const [manualDeepDiveLoading, setManualDeepDiveLoading] = useState(false);
 
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
@@ -379,10 +380,20 @@ const Index = () => {
 
     setDeepDiveLoadingByCompany((prev) => {
       const next: Record<string, boolean> = {};
+      const previousLoadingKeys = Object.entries(prev)
+        .filter(([, isLoading]) => Boolean(isLoading))
+        .map(([key]) => key);
+
       competitors.forEach((comp) => {
-        const key = normalizeKey(comp.name);
-        if (prev[key]) {
-          next[key] = true;
+        const canonicalKey = normalizeKey(comp.name);
+        const hasActiveLoadingAlias = previousLoadingKeys.some((loadingKey) => {
+          if (loadingKey === canonicalKey) return true;
+          if (loadingKey.includes(canonicalKey) || canonicalKey.includes(loadingKey)) return true;
+          return namesLikelySameCompany(loadingKey, comp.name);
+        });
+
+        if (hasActiveLoadingAlias) {
+          next[canonicalKey] = true;
         }
       });
       return next;
@@ -469,7 +480,7 @@ const Index = () => {
   const companiesWithInsights = competitors.filter((comp) => !!getInsightForCompany(comp.name)).map((comp) => comp.name);
   const missingInsightCompanies = competitors.filter((comp) => !getInsightForCompany(comp.name)).map((comp) => comp.name);
   const companyColors = Object.fromEntries(competitors.map((comp) => [comp.name, comp.color]));
-  const isGeneratingDeep = Object.values(deepDiveLoadingByCompany).some(Boolean);
+  const isGeneratingDeep = manualDeepDiveLoading || Object.values(deepDiveLoadingByCompany).some(Boolean);
   const isMobileViewport = viewportWidth < 768;
   const isTabletViewport = viewportWidth >= 768 && viewportWidth < 1280;
   const radarChartHeight = isMobileViewport ? 340 : isTabletViewport ? 420 : 500;
@@ -785,6 +796,11 @@ const Index = () => {
 
       const newCompetitorData = transformToCompetitorData(data, availableColor);
       setCompetitors(prev => isPrimary ? [newCompetitorData] : [...prev, newCompetitorData]);
+      setDeepDiveLoadingByCompany((prev) => ({
+        ...prev,
+        [deepDiveRequestKey]: true,
+        [normalizeKey(newCompetitorData.name)]: true,
+      }));
 
       if (isPrimary || competitors.length === 0) {
         setSelectedInsightCompany(newCompetitorData.name);
@@ -871,13 +887,18 @@ const Index = () => {
 
   const handleGenerateDeepDive = async () => {
     if (!selectedInsightCompany) return;
-    const result = await generateDeepDiveForCompany(selectedInsightCompany, {
-      notifyOnSuccess: false,
-      notifyOnError: true,
-      force: true,
-    });
-    if (result) {
-      toast.success("Deep dive analysis complete");
+    setManualDeepDiveLoading(true);
+    try {
+      const result = await generateDeepDiveForCompany(selectedInsightCompany, {
+        notifyOnSuccess: false,
+        notifyOnError: true,
+        force: true,
+      });
+      if (result) {
+        toast.success("Deep dive analysis complete");
+      }
+    } finally {
+      setManualDeepDiveLoading(false);
     }
   };
 
@@ -886,7 +907,7 @@ const Index = () => {
     toast.info("Generating PDF report...");
     try {
       const primaryInsight = competitors[0] ? getInsightForCompany(competitors[0].name) : null;
-      exportReportToPDF(primaryInsight, competitors, DIMENSION_LABELS);
+      await exportReportToPDF(primaryInsight, competitors, DIMENSION_LABELS);
       toast.success("Report exported successfully");
     } catch (e) {
       console.error(e);
